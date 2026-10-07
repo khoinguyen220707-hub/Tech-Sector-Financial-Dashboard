@@ -19,9 +19,9 @@ Tech-Sector-Financial-Dashboard/
 │   └── processed/                     # Cleaned datasets with handled outliers
 │
 ├── docs/                  
-│   ├── 📄 Data_Cleaning_Process.md       # Outlier handling & data wrangling notes
-│   ├── 📄 Financial_Metrics_Glossary.md  # Definitions of ROA, ROE, D/E, etc.
-│   └── 📄 Data_Source.md                 # Data origin and compliance details
+│   ├── Data_Cleaning_Process.md       # Outlier handling & data wrangling notes
+│   ├── Financial_Metrics_Glossary.md  # Definitions of ROA, ROE, D/E, etc.
+│   └── Data_Source.md                 # Data origin and compliance details
 │
 ├── dashboard/             
 │   └── Tech_Financial_Dashboard.pbix
@@ -39,61 +39,67 @@ Tech-Sector-Financial-Dashboard/
 ## The 6-Step Data Analysis Process
 
 ### 1. Ask
-* **Business Question:**
-1. How do annual members and casual riders use Cyclistic bikes differently?
-2. Why would casual riders buy Cyclistic annual memberships?
-3. How can Cyclistic use digital media to influence casual riders to become members?
-* **Objective:** Identify trends and patterns to convert casual riders into annual members
+- **Business Questions:**
+  1. Which tech sub-sectors demonstrated the highest profitability resilience and Net Income growth from 2020 to 2026?
+  2. How do capital structures (Debt-to-Equity ratios) impact the risk and return profiles across different tech market caps?
+  3. What actionable insights can investors derive regarding capital allocation and risk mitigation in the tech sector?
+- **Objective:** Build an end-to-end analytical framework and Power BI dashboard to evaluate tech sector performance and guide strategic investment decisions.
+
 ### 2. Prepare:
-* Imported 12 months of CSV files into BigQuery
-* Merged datasets into a single table ('trips_2025_uncleaned') consisting of over **5.5 million** rows
-* Verified schema consistency across all files
-### 3.Process:
-* **Cleaning:** Removed duplicates, null values, and test station entries.
-* **Calculation:**
-  * Extracted 'day_of_week"
-  * Estimate the total rides
-  * Group hours into 3 main categories
-  * **Filtering:** Excluded trips shorter than 1 minute or longer than 24 hours to eliminate outliers.
+- Extracted multi-year financial statements and metadata from SEC EDGAR API into Google BigQuery.
+- Aggregated raw records into standardized master tables consisting of hundreds of tech enterprises.
+- Verified schema consistency, currency units, and fiscal year alignment across all entities.
+
+### 3. Process:
+- **Cleaning:** Handled missing values, normalized divergent fiscal calendars, and treated structural outliers in financial metrics.
+- **Calculation & Transformation:**
+  * Engineered core financial ratios (ROA, ROE, Debt-to-Equity, Profit Margins) using SQL and Power Query.
+  * Filtered out distorted entities, extreme anomalies, and unmapped corporate filings to guarantee data fidelity.
+
 ### 4. Analyze:
-* **Data Aggregation:** Perform calculations for the duration intensity
-* **Pivot Analysis:** Using pivot tables to search for overall insights through statistical numbers
-* **Key Findings:**
-  * **Annual members** are the majority in the distribution
-  * **Members** shows a consistent pattern during weekdays, while **Casuals** show a peaking on weekends afternoons.
-  * Both **casual riders** and **annual members** show a preference for electric bikes
-  * **Casual riders** travel **2x longer** on average compared to members, but the frequency is lower
-  * Top 3 stations for **casual riders** are all near **recreational areas**
+- **Data Aggregation:** Computed multi-year moving averages and sector benchmarks for profitability and risk metrics.
+- **Key Findings:**
+  * **Profitability Concentration:** A small percentage of mega-cap tech companies drive the majority of sector-wide net income growth.
+  * **Risk Profiles:** High-growth firms exhibit higher volatility in Debt-to-Equity ratios during macroeconomic shifts.
+  * **Capital Efficiency:** Distinct divergence in ROE performance between hardware-heavy and software-as-a-service (SaaS) tech verticals.
+
 ### 5. Share
-* **Visualization tool:** Developed simple and accesible charts through **Excel** and interactive dashboard using **Tableau**
-* **Design Philosophy:** Applied "Data-to-Ink Ratio" principles to ensure clarity and focus on key trends
-* **Visual storytelling:** Displayed all the findings and insights in a structured and logical way through **Microsoft PowerPoint**
-* **Dashboard Link:**
- * **Temporal Analysis:** https://public.tableau.com/app/profile/nguyen.mai4551/vizzes
- * **Geographic Analysis:** https://public.tableau.com/app/profile/nguyen.mai4551/viz/Book2_17700077149760/Sheet1
+- **Visualization Tool:** Developed an interactive, SaaS-standard executive dashboard using **Power BI**.
+- **Design Philosophy:** Applied clean visual hierarchy, effective color-coding, and custom DAX measures to highlight key financial KPIs without clutter.
+- **Visual Storytelling:** Structured the dashboard to guide investors seamlessly from high-level macroeconomic tech trends down to individual company financials.
+- **Dashboard Link:** *(Insert your Power BI Public/Web Link here if applicable)*
+
 ### 6. Act
-1. **Weekend Membership Plan:** Launch a "Weekend-Only" membership tier or a "Summer Pass" specifically targeting casual riders who follow these patterns
-2. **Strategic Trial Campaign:** Focus and promote digital marketing of  efforts, especially near recreational areas and tourist attractions most frequented by casual riders
-3. **Gamification & Reward System:** Offer captivating and impressive rewards or discounts to casual riders who bike frequently
+1. **Strategic Capital Allocation:** Advise investors to diversify across resilient software sub-sectors while carefully monitoring debt exposure in hardware-centric tech firms.
+2. **Risk Monitoring Framework:** Establish threshold-based alerts using key ratios (like D/E and ROA) for continuous portfolio risk evaluation.
+3. **Future Expansion:** Integrate real-time SEC automated ingestion pipelines to keep the dashboard updated dynamically as upcoming quarterly/annual reports are filed.
+
 ## 7. SQL Highlights
-``` SQL
--- Calculating trips by duration to identify usage patterns
-CREATE OR REPLACE TABLE `first-case-study-485421.cyclistic_tripdata_2025.trips_2025_User_frequency` AS
-(
+### Step 1: Merging Financial Metrics with Company Metadata
+```sql
+CREATE OR REPLACE TABLE `first-case-study-485421.portfolio_data.transformed_financial_data` AS
+SELECT * 
+FROM `first-case-study-485421.portfolio_data.sec_financial_metrics`
+LEFT JOIN `first-case-study-485421.portfolio_data.company_info`
+USING(Ticker);
+```
+
+### Step 2: Cleaning, Transforming, and Creating the Final Table
+```sql
+CREATE OR REPLACE TABLE `first-case-study-485421.portfolio_data.final_financial_data` AS
 SELECT
-  EXTRACT(MONTH FROM started_at ) AS Month,
-  member_casual,
-  ROUND(MAX(TIMESTAMP_DIFF(ended_at, started_at, SECOND)/60), 2) AS max_length,
-  ROUND(MIN(TIMESTAMP_DIFF(ended_at, started_at, SECOND)/60), 2) AS min_length,
-  ROUND(AVG(TIMESTAMP_DIFF(ended_at, started_at, SECOND)/60), 2) AS mean_length,
-  ROUND(SUM(TIMESTAMP_DIFF(ended_at, started_at, SECOND)/60), 2) AS total_length
-FROM `first-case-study-485421.cyclistic_tripdata_2025.trips_2025_cleaned`
-GROUP BY month, member_casual
-ORDER BY month
+    Ticker,
+    Company_Name,
+    EXTRACT(YEAR FROM Date) AS year_report,
+    Metric,
+    ROUND(MAX(Value_USD)/1000000000,2) AS value_in_billions
+FROM `first-case-study-485421.portfolio_data.transformed_financial_data`
+WHERE Value_USD IS NOT NULL
+GROUP BY Ticker, Company_Name, year_report, Metric
+ORDER BY Ticker, Company_Name, year_report, Metric;
 ```
 ## 8. Connect with Me
 I am always open to discussing Data Analytics, networking, or internship opportunities
 * **LinkedIn:** https://www.linkedin.com/in/nguyen-mai-195870395/
-* **Interactive Portfolio:**
 * **Email:** khoinguyen220707@gmail.com
 * **Tableau Public:** https://public.tableau.com/app/profile/nguyen.mai4551/vizzes
