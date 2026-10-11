@@ -1,0 +1,124 @@
+-- ============================================================
+-- MEASURES
+-- Financial ratios and performance metrics used in Power BI
+-- ============================================================
+
+% Profitable Companies =
+DIVIDE(
+    CALCULATE(
+        DISTINCTCOUNT('final_financial_data'[Company_Name]),
+        'final_financial_data'[Business_Status] = "Profit"
+    ),
+    CALCULATE(
+        DISTINCTCOUNT('final_financial_data'[Company_Name]),
+        'final_financial_data'[Metric] = "Net Income"
+    ),
+    0
+)
+
+
+Asset Turnover Ratio =
+DIVIDE(
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "Revenue"
+    ),
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "Assets"
+    ),
+    0
+)
+
+
+Debt-to-Equity Ratio (D/E) =
+DIVIDE(
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "Liabilities"
+    ),
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "StockholdersEquity"
+    ),
+    0
+)
+
+
+Net Profit Margin =
+DIVIDE(
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "Net Income"
+    ),
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "Revenue"
+    ),
+    0
+)
+
+
+Return on Assets (ROA) =
+DIVIDE(
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "Net Income"
+    ),
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "Assets"
+    ),
+    0
+)
+
+
+Return on Equity (ROE) =
+DIVIDE(
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "Net Income"
+    ),
+    CALCULATE(
+        SUM('final_financial_data'[value_in_billions]),
+        'final_financial_data'[Metric] = "StockholdersEquity"
+    ),
+    0
+)
+
+
+-- ============================================================
+-- CALCULATED COLUMNS
+-- Classification fields used in the Power BI data model
+-- ============================================================
+
+Business_Status =
+IF(
+    'final_financial_data'[Metric] = "Net Income",
+    IF(
+        'final_financial_data'[value_in_billions] > 0,
+        "Profit",
+        "Loss"
+    ),
+    BLANK()
+)
+
+
+Firm_Size =
+VAR Avg_Revenue =
+    CALCULATE(
+        AVERAGE('final_financial_data'[value_in_billions]),
+        ALLEXCEPT(
+            'final_financial_data',
+            'final_financial_data'[Company_Name]
+        ),
+        'final_financial_data'[Metric] = "Revenue"
+    )
+RETURN
+    SWITCH(
+        TRUE(),
+        Avg_Revenue >= 10, "Big Firm",
+        Avg_Revenue >= 2, "Medium Firm",
+        ISBLANK(Avg_Revenue), "Unknown",
+        "Small Firm"
+    )
