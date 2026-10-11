@@ -2,7 +2,6 @@
 -- STEP 1: JOIN COMPANY INFORMATION WITH SEC FINANCIAL DATA
 -- ============================================================
 
-```sql
 CREATE OR REPLACE TABLE
   `first-case-study-485421.portfolio_data.transformed_financial_data` AS
 
@@ -10,13 +9,12 @@ SELECT *
 FROM `first-case-study-485421.portfolio_data.company_info`
 LEFT JOIN `first-case-study-485421.portfolio_data.sec_financial_metrics`
 USING (Ticker);
-```
+
 
 -- ============================================================
 -- STEP 2: CLEAN AND AGGREGATE DATA FOR POWER BI
 -- ============================================================
 
-```sql
 CREATE OR REPLACE TABLE
   `first-case-study-485421.portfolio_data.final_financial_data` AS
 
@@ -38,4 +36,3 @@ ORDER BY
     Company_Name,
     year_report,
     Metric;
-```
